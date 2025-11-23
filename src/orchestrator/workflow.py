@@ -38,10 +38,8 @@ class Orchestrator:
         """
         self.logger.info("Starting Orchestrator...")
         
-        iteration = 0
-        while max_iterations == 0 or iteration < max_iterations:
-            iteration += 1
-            
+        iteration = 1
+        while max_iterations == 0 or iteration <= max_iterations:
             # Step 1: Find next pending topic
             topic = self.job_queue.get_next_pending_topic()
             if topic is None:
@@ -77,6 +75,8 @@ class Orchestrator:
             except Exception as e:
                 self.logger.error(f"Error processing topic '{topic}': {str(e)}")
                 self.job_queue.update_status(topic, "Failed", error=str(e))
+            
+            iteration += 1
         
         self.logger.info("Orchestrator finished.")
 

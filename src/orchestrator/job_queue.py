@@ -1,9 +1,9 @@
 """Job queue management using Excel files."""
 
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 import openpyxl
-from openpyxl import Workbook
 
 
 class JobQueue:
@@ -22,7 +22,7 @@ class JobQueue:
     def _ensure_queue_exists(self) -> None:
         """Create the queue file if it doesn't exist."""
         if not self.queue_file.exists():
-            wb = Workbook()
+            wb = openpyxl.Workbook()
             ws = wb.active
             ws.title = "Topics"
             
@@ -45,19 +45,23 @@ class JobQueue:
             Topic string or None if no pending topics
         """
         wb = openpyxl.load_workbook(self.queue_file)
-        ws = wb.active
-        
-        # Skip header row (row 1)
-        for row in range(2, ws.max_row + 1):
-            status = ws.cell(row=row, column=2).value
-            topic = ws.cell(row=row, column=1).value
+        try:
+            ws = wb.active
             
-            if status == "Pending" and topic:
-                wb.close()
-                return topic
-        
-        wb.close()
-        return None
+            # Skip header row (row 1), check if there are data rows
+            if ws.max_row < 2:
+                return None
+            
+            for row in range(2, ws.max_row + 1):
+                status = ws.cell(row=row, column=2).value
+                topic = ws.cell(row=row, column=1).value
+                
+                if status == "Pending" and topic:
+                    return topic
+            
+            return None
+        finally:
+            wb.close()
 
     def claim_topic(self, topic: str, claimed_by: str = "orchestrator") -> bool:
         """
@@ -70,33 +74,31 @@ class JobQueue:
         Returns:
             True if successfully claimed, False otherwise
         """
-        from datetime import datetime
-        
         wb = openpyxl.load_workbook(self.queue_file)
-        ws = wb.active
-        
-        # Find the topic row
-        for row in range(2, ws.max_row + 1):
-            current_topic = ws.cell(row=row, column=1).value
-            current_status = ws.cell(row=row, column=2).value
+        try:
+            ws = wb.active
             
-            if current_topic == topic:
-                # Only claim if status is Pending
-                if current_status != "Pending":
-                    wb.close()
-                    return False
+            # Find the topic row
+            for row in range(2, ws.max_row + 1):
+                current_topic = ws.cell(row=row, column=1).value
+                current_status = ws.cell(row=row, column=2).value
                 
-                # Update status to In_Progress
-                ws.cell(row=row, column=2, value="In_Progress")
-                ws.cell(row=row, column=3, value=claimed_by)
-                ws.cell(row=row, column=4, value=datetime.now().isoformat())
-                
-                wb.save(self.queue_file)
-                wb.close()
-                return True
-        
-        wb.close()
-        return False
+                if current_topic == topic:
+                    # Only claim if status is Pending
+                    if current_status != "Pending":
+                        return False
+                    
+                    # Update status to In_Progress
+                    ws.cell(row=row, column=2, value="In_Progress")
+                    ws.cell(row=row, column=3, value=claimed_by)
+                    ws.cell(row=row, column=4, value=datetime.now().isoformat())
+                    
+                    wb.save(self.queue_file)
+                    return True
+            
+            return False
+        finally:
+            wb.close()
 
     def update_status(
         self, 
@@ -115,33 +117,32 @@ class JobQueue:
         Returns:
             True if successfully updated, False otherwise
         """
-        from datetime import datetime
-        
         wb = openpyxl.load_workbook(self.queue_file)
-        ws = wb.active
-        
-        # Find the topic row
-        for row in range(2, ws.max_row + 1):
-            current_topic = ws.cell(row=row, column=1).value
+        try:
+            ws = wb.active
             
-            if current_topic == topic:
-                # Update status
-                ws.cell(row=row, column=2, value=status)
+            # Find the topic row
+            for row in range(2, ws.max_row + 1):
+                current_topic = ws.cell(row=row, column=1).value
                 
-                # Update completed_at if status is Completed
-                if status == "Completed":
-                    ws.cell(row=row, column=5, value=datetime.now().isoformat())
-                
-                # Update error if provided
-                if error:
-                    ws.cell(row=row, column=6, value=error)
-                
-                wb.save(self.queue_file)
-                wb.close()
-                return True
-        
-        wb.close()
-        return False
+                if current_topic == topic:
+                    # Update status
+                    ws.cell(row=row, column=2, value=status)
+                    
+                    # Update completed_at if status is Completed
+                    if status == "Completed":
+                        ws.cell(row=row, column=5, value=datetime.now().isoformat())
+                    
+                    # Update error if provided
+                    if error:
+                        ws.cell(row=row, column=6, value=error)
+                    
+                    wb.save(self.queue_file)
+                    return True
+            
+            return False
+        finally:
+            wb.close()
 
     def add_topic(self, topic: str) -> bool:
         """
@@ -154,20 +155,21 @@ class JobQueue:
             True if successfully added, False if topic already exists
         """
         wb = openpyxl.load_workbook(self.queue_file)
-        ws = wb.active
-        
-        # Check if topic already exists
-        for row in range(2, ws.max_row + 1):
-            existing_topic = ws.cell(row=row, column=1).value
-            if existing_topic == topic:
-                wb.close()
-                return False
-        
-        # Add new topic
-        ws.append([topic, "Pending", "", "", "", ""])
-        wb.save(self.queue_file)
-        wb.close()
-        return True
+        try:
+            ws = wb.active
+            
+            # Check if topic already exists
+            for row in range(2, ws.max_row + 1):
+                existing_topic = ws.cell(row=row, column=1).value
+                if existing_topic == topic:
+                    return False
+            
+            # Add new topic
+            ws.append([topic, "Pending", "", "", "", ""])
+            wb.save(self.queue_file)
+            return True
+        finally:
+            wb.close()
 
     def get_all_topics(self) -> list:
         """
@@ -177,21 +179,23 @@ class JobQueue:
             List of dictionaries containing topic information
         """
         wb = openpyxl.load_workbook(self.queue_file)
-        ws = wb.active
-        
-        topics = []
-        # Skip header row
-        for row in range(2, ws.max_row + 1):
-            topic_data = {
-                "topic": ws.cell(row=row, column=1).value,
-                "status": ws.cell(row=row, column=2).value,
-                "claimed_by": ws.cell(row=row, column=3).value,
-                "started_at": ws.cell(row=row, column=4).value,
-                "completed_at": ws.cell(row=row, column=5).value,
-                "error": ws.cell(row=row, column=6).value,
-            }
-            if topic_data["topic"]:  # Only add if topic is not empty
-                topics.append(topic_data)
-        
-        wb.close()
-        return topics
+        try:
+            ws = wb.active
+            
+            topics = []
+            # Skip header row
+            for row in range(2, ws.max_row + 1):
+                topic_data = {
+                    "topic": ws.cell(row=row, column=1).value,
+                    "status": ws.cell(row=row, column=2).value,
+                    "claimed_by": ws.cell(row=row, column=3).value,
+                    "started_at": ws.cell(row=row, column=4).value,
+                    "completed_at": ws.cell(row=row, column=5).value,
+                    "error": ws.cell(row=row, column=6).value,
+                }
+                if topic_data["topic"]:  # Only add if topic is not empty
+                    topics.append(topic_data)
+            
+            return topics
+        finally:
+            wb.close()

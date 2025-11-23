@@ -2,8 +2,13 @@
 
 import hashlib
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
+
+
+# Constants for directory naming
+ALLOWED_DIR_CHARS = (' ', '-', '_')
 
 
 class StateManager:
@@ -27,9 +32,26 @@ class StateManager:
             topic: Research topic string
             
         Returns:
-            MD5 hash of the topic (first 8 characters)
+            SHA-256 hash of the topic (first 8 characters)
         """
-        return hashlib.md5(topic.encode()).hexdigest()[:8]
+        return hashlib.sha256(topic.encode()).hexdigest()[:8]
+
+    def _get_workspace_name(self, topic: str) -> str:
+        """
+        Generate workspace directory name from topic.
+        
+        Args:
+            topic: Research topic string
+            
+        Returns:
+            Workspace directory name
+        """
+        topic_hash = self._hash_topic(topic)
+        # Create a safe directory name from topic
+        safe_topic = "".join(c if c.isalnum() or c in ALLOWED_DIR_CHARS else '_' for c in topic)
+        safe_topic = safe_topic.replace(' ', '_')[:50]  # Limit length
+        
+        return f"{topic_hash}_{safe_topic}"
 
     def create_workspace(self, topic: str) -> Path:
         """
@@ -41,12 +63,7 @@ class StateManager:
         Returns:
             Path to the created workspace directory
         """
-        topic_hash = self._hash_topic(topic)
-        # Create a safe directory name from topic
-        safe_topic = "".join(c if c.isalnum() or c in (' ', '-', '_') else '_' for c in topic)
-        safe_topic = safe_topic.replace(' ', '_')[:50]  # Limit length
-        
-        workspace_name = f"{topic_hash}_{safe_topic}"
+        workspace_name = self._get_workspace_name(topic)
         workspace_path = self.base_workspace_dir / workspace_name
         workspace_path.mkdir(parents=True, exist_ok=True)
         
@@ -83,8 +100,6 @@ class StateManager:
             workspace_path: Path to workspace directory
             state: State dictionary to save
         """
-        from datetime import datetime
-        
         # Update timestamp
         state["updated_at"] = datetime.now().isoformat()
         if "created_at" not in state or state["created_at"] is None:
@@ -124,9 +139,5 @@ class StateManager:
         Returns:
             Path where the workspace would be/is located
         """
-        topic_hash = self._hash_topic(topic)
-        safe_topic = "".join(c if c.isalnum() or c in (' ', '-', '_') else '_' for c in topic)
-        safe_topic = safe_topic.replace(' ', '_')[:50]
-        
-        workspace_name = f"{topic_hash}_{safe_topic}"
+        workspace_name = self._get_workspace_name(topic)
         return self.base_workspace_dir / workspace_name
