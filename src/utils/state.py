@@ -6,7 +6,7 @@ This module implements state handling as defined in the Hybrid Hierarchical-Grap
 
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -60,8 +60,8 @@ class State:
         self.phase_outputs = phase_outputs or {}
         self.metrics = metrics or {}
         self.errors = errors or []
-        self.created_at = created_at or datetime.utcnow().isoformat()
-        self.updated_at = updated_at or datetime.utcnow().isoformat()
+        self.created_at = created_at or datetime.now(timezone.utc).isoformat()
+        self.updated_at = updated_at or datetime.now(timezone.utc).isoformat()
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert state to dictionary for serialization.
@@ -132,7 +132,7 @@ def create_workspace(topic: str, base_path: str = "projects") -> Path:
         manifest = {
             "topic": topic,
             "uuid": topic_uuid,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "workspace_path": str(workspace_path),
         }
         
@@ -159,7 +159,7 @@ def save_state(state: State) -> None:
     """
     try:
         # Update timestamp
-        state.updated_at = datetime.utcnow().isoformat()
+        state.updated_at = datetime.now(timezone.utc).isoformat()
         
         # Save to state.json
         state_path = state.workspace_path / "state.json"

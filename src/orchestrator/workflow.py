@@ -8,7 +8,7 @@ all research phases, with state management and error handling.
 """
 
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -217,7 +217,7 @@ class OrchestratorWorkflow:
             True if processing successful, False otherwise
         """
         workspace_path = None
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         try:
             logger.info(f"=== Starting processing for topic: {topic} ===")
@@ -233,7 +233,7 @@ class OrchestratorWorkflow:
             self.execute_phases(state)
             
             # Calculate duration and quality
-            end_time = datetime.utcnow()
+            end_time = datetime.now(timezone.utc)
             duration_seconds = (end_time - start_time).total_seconds()
             quality_score = state.phase_outputs.get("phase_8", {}).get("quality_score", 0.0)
             
@@ -254,7 +254,7 @@ class OrchestratorWorkflow:
             logger.error(f"Failed to process topic '{topic}': {e}")
             
             # Calculate duration
-            end_time = datetime.utcnow()
+            end_time = datetime.now(timezone.utc)
             duration_seconds = (end_time - start_time).total_seconds()
             
             # Update job queue - failure

@@ -8,7 +8,7 @@ to prevent concurrent processing of the same topic.
 """
 
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Dict, Any
 
@@ -108,7 +108,7 @@ class JobQueue:
             wb = load_workbook(self.excel_path)
             ws = wb.active
             
-            current_time = datetime.utcnow()
+            current_time = datetime.now(timezone.utc)
             
             # Iterate through rows (skip header)
             for row_idx in range(2, ws.max_row + 1):
@@ -190,7 +190,10 @@ class JobQueue:
                 return False
             
             # Write Phase: Update status with check
-            # Reload to check if status changed (simple race condition mitigation)
+            # NOTE: Race condition mitigation is limited with Excel files.
+            # For production use, consider using a proper database with atomic operations
+            # or implement file-level locking (e.g., fcntl on Unix, msvcrt on Windows).
+            # The reload/recheck provides basic protection but is not fully atomic.
             wb = load_workbook(self.excel_path)
             ws = wb.active
             
@@ -203,7 +206,7 @@ class JobQueue:
                 return False
             
             # Update status
-            timestamp_start = datetime.utcnow().isoformat()
+            timestamp_start = datetime.now(timezone.utc).isoformat()
             ws.cell(row=topic_row, column=self.COL_STATUS, value=self.STATUS_IN_PROGRESS)
             ws.cell(row=topic_row, column=self.COL_TIMESTAMP_START, value=timestamp_start)
             
