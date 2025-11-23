@@ -1,0 +1,20 @@
+"""Perplexity API client utilities.
+
+This module provides utilities for interacting with Perplexity API.
+"""
+
+from typing import Optional
+
+
+def call_perplexity(query: str, search_domain: str = "general") -> dict:
+    """Call Perplexity API with a search query.
+    
+    Args:
+        query: Search query
+        search_domain: Search domain/context
+        
+    Returns:
+        Response from Perplexity API
+    """
+    # Placeholder for Perplexity implementation
+    pass
