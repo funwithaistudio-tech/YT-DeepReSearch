@@ -2,58 +2,90 @@
 
 import os
 import sys
+import argparse
 from pathlib import Path
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from config.settings import Settings
-from research.researcher import DeepResearcher
-from content.script_generator import ScriptGenerator
-from utils.logger import setup_logger
+from orchestrator.workflow import Orchestrator
+from orchestrator.job_queue import JobQueue
 
 
 def main():
     """Main execution function."""
-    # Setup logging
-    logger = setup_logger()
-    logger.info("Starting YT-DeepReSearch system...")
+    parser = argparse.ArgumentParser(
+        description="YT-DeepReSearch: AI-powered deep research system"
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["orchestrator", "single"],
+        default="orchestrator",
+        help="Run mode: 'orchestrator' for continuous processing, 'single' for one-off job"
+    )
+    parser.add_argument(
+        "--topic",
+        type=str,
+        help="Topic to research (required for 'single' mode)"
+    )
+    parser.add_argument(
+        "--job-queue",
+        type=str,
+        default="job_queue.xlsx",
+        help="Path to job queue Excel file (default: job_queue.xlsx)"
+    )
+    parser.add_argument(
+        "--projects-dir",
+        type=str,
+        default="projects",
+        help="Base directory for project workspaces (default: projects)"
+    )
+    parser.add_argument(
+        "--max-iterations",
+        type=int,
+        help="Maximum number of jobs to process (for testing)"
+    )
     
-    # Load configuration
-    settings = Settings()
+    args = parser.parse_args()
     
     try:
-        # Initialize components
-        researcher = DeepResearcher(
-            perplexity_api_key=settings.perplexity_api_key,
-            gemini_api_key=settings.gemini_api_key
-        )
-        
-        script_generator = ScriptGenerator(
-            gemini_api_key=settings.gemini_api_key
-        )
-        
-        # Get topic from user
-        topic = input("Enter research topic: ")
-        
-        # Perform deep research
-        logger.info(f"Researching topic: {topic}")
-        research_data = researcher.research(topic)
-        
-        # Generate script
-        logger.info("Generating video script...")
-        script = script_generator.generate_script(research_data)
-        
-        # Save output
-        output_path = Path(settings.output_dir) / f"{topic.replace(' ', '_')}_script.txt"
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(script)
-        
-        logger.info(f"Script saved to: {output_path}")
-        print(f"\nScript generated successfully!\nSaved to: {output_path}")
-        
+        if args.mode == "orchestrator":
+            # Run orchestrator in continuous mode
+            print("Starting YT-DeepReSearch Orchestrator...")
+            print(f"Job queue: {args.job_queue}")
+            print(f"Projects directory: {args.projects_dir}")
+            print("")
+            
+            orchestrator = Orchestrator(
+                job_queue_path=args.job_queue,
+                projects_dir=args.projects_dir
+            )
+            orchestrator.run(max_iterations=args.max_iterations)
+            
+        elif args.mode == "single":
+            # Process a single topic
+            if not args.topic:
+                print("Error: --topic is required for 'single' mode")
+                sys.exit(1)
+            
+            print(f"Processing single topic: {args.topic}")
+            print(f"Job queue: {args.job_queue}")
+            print(f"Projects directory: {args.projects_dir}")
+            print("")
+            
+            orchestrator = Orchestrator(
+                job_queue_path=args.job_queue,
+                projects_dir=args.projects_dir
+            )
+            orchestrator.process_single_job(args.topic)
+            
+    except KeyboardInterrupt:
+        print("\n\nShutting down gracefully...")
+        sys.exit(0)
     except Exception as e:
-        logger.error(f"Error: {str(e)}")
+        print(f"\nError: {str(e)}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 
