@@ -120,12 +120,15 @@ class JobQueue:
                 return row_idx
         return None
     
-    def add_topic(self, topic: str, notes: str = "") -> None:
+    def add_topic(self, topic: str, notes: str = "") -> bool:
         """Add a new topic to the queue.
         
         Args:
             topic: Research topic
             notes: Optional notes
+            
+        Returns:
+            True if topic was added, False if it already exists
         """
         workbook = self._load_workbook()
         sheet = workbook.active
@@ -133,7 +136,7 @@ class JobQueue:
         # Check if topic already exists
         if self._find_topic_row(sheet, topic):
             workbook.close()
-            return
+            return False
         
         # Add new row
         new_row = sheet.max_row + 1
@@ -143,6 +146,7 @@ class JobQueue:
         
         self._save_workbook(workbook)
         workbook.close()
+        return True
     
     def get_next_pending_topic(self) -> Optional[str]:
         """Get the next pending topic from the queue.
