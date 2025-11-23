@@ -15,4 +15,4 @@ def research_subtopic(subtopic: str) -> dict:
         Dictionary containing research results
     """
     # Placeholder for Phase 2 implementation
-    pass
+    raise NotImplementedError("Phase 2: Deep research not yet implemented")

@@ -15,4 +15,4 @@ def generate_content(narrative_plan: dict) -> dict:
         Dictionary containing generated content
     """
     # Placeholder for Phase 7 implementation
-    pass
+    raise NotImplementedError("Phase 7: Content generation not yet implemented")

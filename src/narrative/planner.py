@@ -15,4 +15,4 @@ def plan_narrative(hierarchy: dict) -> dict:
         Dictionary containing narrative plan
     """
     # Placeholder for Phase 6 implementation
-    pass
+    raise NotImplementedError("Phase 6: Narrative planning not yet implemented")

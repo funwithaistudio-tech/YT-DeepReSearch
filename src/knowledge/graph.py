@@ -15,4 +15,4 @@ def build_knowledge_graph(compressed_data: dict) -> dict:
         Dictionary containing knowledge graph structure
     """
     # Placeholder for Phase 4 implementation
-    pass
+    raise NotImplementedError("Phase 4: Knowledge graph construction not yet implemented")

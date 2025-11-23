@@ -17,4 +17,4 @@ def call_gemini(prompt: str, model: str = "gemini-pro") -> str:
         Response from Gemini
     """
     # Placeholder for Gemini implementation
-    pass
+    raise NotImplementedError("Gemini API integration not yet implemented")

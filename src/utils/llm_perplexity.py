@@ -17,4 +17,4 @@ def call_perplexity(query: str, search_domain: str = "general") -> dict:
         Response from Perplexity API
     """
     # Placeholder for Perplexity implementation
-    pass
+    raise NotImplementedError("Perplexity API integration not yet implemented")

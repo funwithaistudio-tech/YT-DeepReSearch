@@ -15,4 +15,4 @@ def compress_research(research_data: dict) -> dict:
         Dictionary containing compressed insights
     """
     # Placeholder for Phase 3 implementation
-    pass
+    raise NotImplementedError("Phase 3: Content compression not yet implemented")

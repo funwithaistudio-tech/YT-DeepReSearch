@@ -15,4 +15,4 @@ def create_hierarchy(knowledge_graph: dict) -> dict:
         Dictionary containing hierarchical organization
     """
     # Placeholder for Phase 5 implementation
-    pass
+    raise NotImplementedError("Phase 5: Hierarchical organization not yet implemented")

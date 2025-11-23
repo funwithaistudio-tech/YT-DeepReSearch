@@ -15,4 +15,4 @@ def decompose_topic(topic: str) -> dict:
         Dictionary containing decomposition tree
     """
     # Placeholder for Phase 1 implementation
-    pass
+    raise NotImplementedError("Phase 1: Topic decomposition not yet implemented")
