@@ -4,11 +4,23 @@ python-dotenv>=1.0.0
 
 # AI/ML APIs
 google-cloud-aiplatform>=1.38.0
+google-cloud-texttospeech>=2.14.0
 perplexityai>=0.1.0
 
 # Data Processing
 pandas>=2.1.0
 numpy>=1.24.0
+
+# Image Processing
+Pillow>=10.0.0
+
+# Video Processing
+moviepy>=1.0.3
+
+# YouTube API
+google-api-python-client>=2.95.0
+google-auth-oauthlib>=1.0.0
+google-auth-httplib2>=0.1.0
 
 # Logging and Monitoring
 loguru>=0.7.0
