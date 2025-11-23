@@ -196,6 +196,240 @@ spec:
               key: gemini
 ```
 
+### Option 4: Oracle Cloud Free Tier VM
+
+Oracle Cloud provides free tier VMs (Always Free resources) that are perfect for running YT-DeepReSearch.
+
+#### Prerequisites
+- Oracle Cloud account (free tier)
+- VM.Standard.E2.1.Micro or VM.Standard.A1.Flex instance (Always Free eligible)
+
+#### Setup Steps
+
+1. **Create Oracle Cloud VM Instance**
+
+```bash
+# From Oracle Cloud Console:
+# 1. Navigate to Compute > Instances
+# 2. Create Instance
+# 3. Select "Always Free-eligible" shape (VM.Standard.E2.1.Micro or Ampere A1)
+# 4. Choose Oracle Linux 8 or Ubuntu 22.04
+# 5. Add your SSH key
+# 6. Configure networking (allow ports 22, 80, 443)
+```
+
+2. **Configure Firewall Rules**
+
+```bash
+# Open required ports in Oracle Cloud Console
+# Networking > Virtual Cloud Networks > Security Lists
+# Add Ingress Rules:
+# - Port 22 (SSH)
+# - Port 80 (HTTP) - optional for web interface
+# - Port 443 (HTTPS) - optional for web interface
+```
+
+3. **SSH to VM and Install Dependencies**
+
+```bash
+# SSH to your Oracle Cloud VM
+ssh -i ~/.ssh/oci_key opc@<your-vm-ip>
+
+# Update system
+sudo yum update -y  # For Oracle Linux
+# OR
+sudo apt-get update && sudo apt-get upgrade -y  # For Ubuntu
+
+# Install Python 3.10+ and dependencies
+sudo yum install -y python39 python39-pip git  # Oracle Linux
+# OR
+sudo apt-get install -y python3.10 python3-pip git  # Ubuntu
+
+# Install Docker (optional but recommended)
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+4. **Clone and Setup Application**
+
+```bash
+# Clone repository
+git clone https://github.com/funwithaistudio-tech/YT-DeepReSearch.git
+cd YT-DeepReSearch
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+5. **Configure Environment**
+
+```bash
+# Copy and edit environment file
+cp .env.example .env
+nano .env
+
+# Add your API keys:
+# PERPLEXITY_API_KEY=your_key
+# GEMINI_API_KEY=your_key
+# GOOGLE_CLOUD_PROJECT=your_project
+# GOOGLE_APPLICATION_CREDENTIALS=/home/opc/YT-DeepReSearch/credentials.json
+```
+
+6. **Setup Google Cloud Credentials**
+
+```bash
+# Copy your GCP credentials JSON file to the VM
+scp -i ~/.ssh/oci_key credentials.json opc@<your-vm-ip>:/home/opc/YT-DeepReSearch/
+
+# On the VM, verify the file
+ls -la /home/opc/YT-DeepReSearch/credentials.json
+```
+
+7. **Run as Systemd Service**
+
+```bash
+# Create systemd service file
+sudo nano /etc/systemd/system/yt-deepresearch.service
+```
+
+Add the following content:
+
+```ini
+[Unit]
+Description=YT-DeepReSearch Video Script Generation Service
+After=network.target
+
+[Service]
+Type=simple
+User=opc
+WorkingDirectory=/home/opc/YT-DeepReSearch
+Environment="PATH=/home/opc/YT-DeepReSearch/venv/bin"
+Environment="PYTHONUNBUFFERED=1"
+ExecStart=/home/opc/YT-DeepReSearch/venv/bin/python src/main.py --mode queue
+Restart=always
+RestartSec=30
+StandardOutput=append:/home/opc/YT-DeepReSearch/logs/service.log
+StandardError=append:/home/opc/YT-DeepReSearch/logs/service-error.log
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+# Enable and start the service
+sudo systemctl daemon-reload
+sudo systemctl enable yt-deepresearch
+sudo systemctl start yt-deepresearch
+
+# Check status
+sudo systemctl status yt-deepresearch
+
+# View logs
+sudo journalctl -u yt-deepresearch -f
+```
+
+8. **Docker Deployment (Alternative)**
+
+```bash
+# Build and run with Docker
+docker build -t yt-deepresearch:latest .
+
+# Run with docker-compose
+docker-compose up -d
+
+# Check logs
+docker-compose logs -f
+```
+
+#### Oracle Cloud Free Tier Specifications
+
+**VM.Standard.E2.1.Micro (AMD)**
+- 1 OCPU (2 vCPUs)
+- 1 GB RAM
+- 47 GB boot volume
+- Suitable for: Single topic processing, small queue
+
+**VM.Standard.A1.Flex (ARM Ampere)**
+- Up to 4 OCPUs
+- Up to 24 GB RAM
+- 47-200 GB boot volume
+- Suitable for: Parallel processing, large queues (recommended)
+
+**Note**: For better performance, use ARM Ampere instance with 2-4 OCPUs and 12-24 GB RAM.
+
+#### Performance Optimization for Oracle Cloud
+
+```bash
+# Adjust worker count based on VM resources
+# Edit .env file:
+# For E2.1.Micro (1GB RAM): Use 1-2 workers
+# For A1.Flex (12GB+ RAM): Use 3-5 workers
+
+# Monitor resource usage
+htop  # Install: sudo yum install htop
+
+# Check memory usage
+free -h
+
+# Monitor disk space
+df -h
+```
+
+#### Backup Configuration
+
+```bash
+# Setup automated backups to Oracle Object Storage
+# Install OCI CLI
+bash -c "$(curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh)"
+
+# Configure OCI CLI
+oci setup config
+
+# Create backup script
+cat > /home/opc/backup.sh << 'EOF'
+#!/bin/bash
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_FILE="backup_${DATE}.tar.gz"
+cd /home/opc/YT-DeepReSearch
+tar -czf /tmp/${BACKUP_FILE} output/ input/ logs/
+oci os object put -bn your-bucket-name --file /tmp/${BACKUP_FILE}
+rm /tmp/${BACKUP_FILE}
+EOF
+
+chmod +x /home/opc/backup.sh
+
+# Add to crontab for daily backups
+crontab -e
+# Add: 0 2 * * * /home/opc/backup.sh
+```
+
+#### Troubleshooting Oracle Cloud Deployment
+
+1. **Port Access Issues**
+   - Check Security Lists in OCI Console
+   - Verify firewall rules: `sudo firewall-cmd --list-all`
+   - For Oracle Linux: `sudo firewall-cmd --permanent --add-port=80/tcp && sudo firewall-cmd --reload`
+
+2. **Memory Issues on E2.1.Micro**
+   - Reduce worker count to 1-2
+   - Enable swap: `sudo dd if=/dev/zero of=/swapfile bs=1M count=2048 && sudo mkswap /swapfile && sudo swapon /swapfile`
+
+3. **Disk Space**
+   - Clean old outputs regularly
+   - Expand boot volume in OCI Console if needed
+   - Use Object Storage for long-term backup
+
+4. **Network Issues**
+   - Check VCN route tables
+   - Verify Internet Gateway is attached
+   - Test connectivity: `ping google.com`
+
 ## Monitoring and Logs
 
 ### View Logs
