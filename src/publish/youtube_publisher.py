@@ -81,7 +81,8 @@ class YouTubePublisher:
             description=description,
             tags=tags,
             category_id=self.settings.youtube_category_id,
-            privacy_status=self.settings.youtube_privacy_status
+            privacy_status=self.settings.youtube_privacy_status,
+            topic_id=script.topic_id
         )
         
         # Add to playlist if configured
@@ -170,7 +171,8 @@ class YouTubePublisher:
         description: str,
         tags: list,
         category_id: str,
-        privacy_status: str
+        privacy_status: str,
+        topic_id: int = None
     ) -> Optional[str]:
         """Upload video to YouTube.
         
@@ -219,7 +221,7 @@ class YouTubePublisher:
         
         # Return placeholder video ID
         logger.info(f"Placeholder upload: {title}")
-        return f"placeholder_video_id_{script.topic_id}"
+        return f"placeholder_video_id_{topic_id if topic_id else 'unknown'}"
     
     def _add_to_playlist(self, video_id: str, playlist_id: str):
         """Add video to a playlist.

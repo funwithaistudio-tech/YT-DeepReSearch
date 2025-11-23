@@ -11,7 +11,7 @@ from src.assets.asset_generator import AssetGenerator
 from src.video.assembler import VideoAssembler
 from src.publish.youtube_publisher import YouTubePublisher
 from src.cleanup.cleanup_manager import CleanupManager
-from src.domain.models import Topic
+from src.domain.models import Topic, TopicStatus
 from src.utils.logger import get_logger
 
 logger = get_logger()
@@ -172,9 +172,9 @@ class Orchestrator:
         logger.info(f"Processing specific topic {topic_id}: {topic.title}")
         
         # Reset topic to pending if needed
-        if topic.status.value != "pending":
+        if topic.status != TopicStatus.PENDING:
             logger.info(f"Resetting topic {topic_id} status to pending")
-            self.topic_repo.update_topic_status(topic.id, "pending")
+            self.topic_repo.update_topic_status(topic.id, TopicStatus.PENDING)
         
         # Process the topic
         self.run_for_next_topic()
