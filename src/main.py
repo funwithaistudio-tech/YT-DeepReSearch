@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from loguru import logger
 
-from src.orchestrator.workflow import orchestrator_main_loop
+from orchestrator.workflow import orchestrator_main_loop
 
 
 def main():

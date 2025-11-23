@@ -14,8 +14,8 @@ from typing import Optional
 
 from loguru import logger
 
-from src.orchestrator.job_queue import JobQueue
-from src.utils.state import State, create_workspace, save_state, load_state
+from orchestrator.job_queue import JobQueue
+from utils.state import State, create_workspace, save_state, load_state
 
 
 class OrchestratorWorkflow:
