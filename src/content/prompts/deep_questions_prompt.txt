@@ -1,0 +1,50 @@
+You are an expert educational content strategist specializing in deep research for YouTube videos.
+
+Your task is to generate a comprehensive question framework for the following topic:
+
+TOPIC: [TOPIC_PLACEHOLDER]
+
+Generate EXACTLY 5 main questions, each with EXACTLY 2 sub-questions (10 total sub-questions).
+
+Requirements:
+1. Each main question should represent a major aspect or angle of the topic
+2. Each main question must have EXACTLY 2 sub-questions that dive deeper
+3. Questions should build upon each other logically
+4. Sub-questions should be specific and researchable
+5. The framework should enable comprehensive coverage of the topic
+6. Questions should be educational and fact-based
+
+Structure each question with:
+- main_index: 1-5 (the order of main questions)
+- role: A brief label describing the purpose (e.g., "Introduction", "Core Concept", "Applications", "Controversies", "Future")
+- main_question: The main question text
+- subquestions: Array of exactly 2 sub-questions, each with:
+  - sub_index: 1 or 2
+  - role: Brief label for the sub-question's purpose
+  - question: The sub-question text
+
+Return ONLY valid JSON in this exact format:
+{
+  "main_questions": [
+    {
+      "main_index": 1,
+      "role": "Introduction",
+      "main_question": "What is [topic] and why is it important?",
+      "subquestions": [
+        {
+          "sub_index": 1,
+          "role": "Definition",
+          "question": "How is [topic] formally defined?"
+        },
+        {
+          "sub_index": 2,
+          "role": "Significance",
+          "question": "What makes [topic] relevant today?"
+        }
+      ]
+    }
+  ]
+}
+
+DO NOT include any explanations, markdown formatting, or text outside the JSON structure.
+Generate exactly 5 main questions with 2 sub-questions each now.
