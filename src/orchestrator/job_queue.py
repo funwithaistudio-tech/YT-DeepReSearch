@@ -8,6 +8,13 @@ from openpyxl import Workbook, load_workbook
 import threading
 
 
+# Job status constants
+STATUS_PENDING = "Pending"
+STATUS_IN_PROGRESS = "In_Progress"
+STATUS_COMPLETED = "Completed"
+STATUS_ERROR = "Error"
+
+
 class JobQueue:
     """
     Manages job queue stored in an Excel file with concurrency support.
@@ -106,7 +113,7 @@ class JobQueue:
                 # Start from row 2 (skip header)
                 for row_idx in range(2, ws.max_row + 1):
                     status = ws.cell(row=row_idx, column=2).value
-                    if status and status.strip().lower() == "pending":
+                    if status and status.strip().lower() == STATUS_PENDING.lower():
                         topic = ws.cell(row=row_idx, column=1).value
                         wb.close()
                         return topic
@@ -137,9 +144,9 @@ class JobQueue:
                     cell_topic = ws.cell(row=row_idx, column=1).value
                     status = ws.cell(row=row_idx, column=2).value
 
-                    if cell_topic == topic and status and status.strip().lower() == "pending":
+                    if cell_topic == topic and status and status.strip().lower() == STATUS_PENDING.lower():
                         # Update status and timestamp
-                        ws.cell(row=row_idx, column=2, value="In_Progress")
+                        ws.cell(row=row_idx, column=2, value=STATUS_IN_PROGRESS)
                         ws.cell(row=row_idx, column=3, value=datetime.now().isoformat())
                         self._save_workbook(wb)
                         return True
@@ -211,7 +218,7 @@ class JobQueue:
                 wb.close()
                 raise RuntimeError(f"Error updating job status: {e}")
 
-    def add_job(self, topic: str, status: str = "Pending") -> bool:
+    def add_job(self, topic: str, status: str = STATUS_PENDING) -> bool:
         """
         Add a new job to the queue.
 

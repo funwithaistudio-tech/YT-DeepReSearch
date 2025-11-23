@@ -2,6 +2,7 @@
 
 import time
 import traceback
+from datetime import datetime
 from typing import Optional
 from pathlib import Path
 
@@ -135,7 +136,7 @@ class Orchestrator:
             # Update manifest with completion
             self.state_manager.update_manifest({
                 "status": "completed",
-                "completed_at": time.strftime("%Y-%m-%dT%H:%M:%S")
+                "completed_at": datetime.now().isoformat()
             })
             
             # Update job queue as completed

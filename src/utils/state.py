@@ -35,12 +35,12 @@ class StateManager:
     def create_workspace(self, topic: str) -> str:
         """
         Create a unique workspace directory for a topic.
-        
+
         Args:
             topic: Research topic
-            
+
         Returns:
-            Path to the created workspace
+            String path to the created workspace directory
         """
         # Generate unique ID
         workspace_id = str(uuid.uuid4())
