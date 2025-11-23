@@ -208,4 +208,5 @@ __marimo__/
 
 # YT-DeepReSearch specific
 topics.xlsx
+!topics_example.xlsx
 projects/
