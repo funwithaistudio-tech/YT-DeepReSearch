@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional
 import json
 
-from src.domain.models import Script
+from src.domain.models import Script, SubSegment
 from src.config.settings import Settings
 from src.utils.logger import get_logger
 
@@ -122,7 +122,7 @@ class VideoAssembler:
         logger.info(f"Created placeholder video at {output_path}")
         return output_path
     
-    def _create_subsegment_clip(self, subsegment, width: int, height: int, fps: int):
+    def _create_subsegment_clip(self, subsegment: SubSegment, width: int, height: int, fps: int):
         """Create a video clip for a subsegment.
         
         This is a placeholder for the actual implementation.

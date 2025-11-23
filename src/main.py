@@ -79,7 +79,11 @@ def main():
                 
             elif command == "run-all":
                 # Run pipeline for all pending topics
-                max_iter = int(sys.argv[2]) if len(sys.argv) > 2 else None
+                try:
+                    max_iter = int(sys.argv[2]) if len(sys.argv) > 2 else None
+                except ValueError:
+                    print("Error: max_count must be a number")
+                    sys.exit(1)
                 orchestrator.run_continuous(max_iterations=max_iter)
                 
             elif command == "run-topic":
@@ -88,7 +92,12 @@ def main():
                     print("Usage: python -m src.main run-topic <topic_id>")
                     sys.exit(1)
                 
-                topic_id = int(sys.argv[2])
+                try:
+                    topic_id = int(sys.argv[2])
+                except ValueError:
+                    print("Error: topic_id must be a number")
+                    sys.exit(1)
+                    
                 orchestrator.run_for_topic_id(topic_id)
                 
             else:

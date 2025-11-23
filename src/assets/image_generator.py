@@ -2,7 +2,7 @@
 
 import time
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from PIL import Image
 import io
 
@@ -124,7 +124,7 @@ class ImageGenerator:
         
         return prompt
     
-    def _generate_image_with_retry(self, prompt: str, filename: str) -> Path:
+    def _generate_image_with_retry(self, prompt: str, filename: str) -> Optional[Path]:
         """Generate image with retry logic.
         
         Args:

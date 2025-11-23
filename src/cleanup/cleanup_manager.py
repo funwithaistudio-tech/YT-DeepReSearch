@@ -88,21 +88,27 @@ class CleanupManager:
         audio_dir = Path(self.settings.assets_dir) / "audio"
         if audio_dir.exists():
             for audio_file in audio_dir.glob(f"topic_{topic_id}_*.mp3"):
-                size = audio_file.stat().st_size
-                audio_file.unlink()
-                deleted_count += 1
-                deleted_size += size
-                logger.debug(f"Deleted audio: {audio_file.name}")
+                try:
+                    size = audio_file.stat().st_size
+                    audio_file.unlink()
+                    deleted_count += 1
+                    deleted_size += size
+                    logger.debug(f"Deleted audio: {audio_file.name}")
+                except Exception as e:
+                    logger.warning(f"Failed to delete audio file {audio_file}: {e}")
         
         # Delete image files
         image_dir = Path(self.settings.assets_dir) / "images"
         if image_dir.exists():
             for image_file in image_dir.glob(f"topic_{topic_id}_*.png"):
-                size = image_file.stat().st_size
-                image_file.unlink()
-                deleted_count += 1
-                deleted_size += size
-                logger.debug(f"Deleted image: {image_file.name}")
+                try:
+                    size = image_file.stat().st_size
+                    image_file.unlink()
+                    deleted_count += 1
+                    deleted_size += size
+                    logger.debug(f"Deleted image: {image_file.name}")
+                except Exception as e:
+                    logger.warning(f"Failed to delete image file {image_file}: {e}")
         
         # Delete video file (keep if you want to retain)
         # video_file = self.output_dir / f"main_video_topic_{topic_id}.mp4"
