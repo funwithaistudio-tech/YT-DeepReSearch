@@ -1,61 +1,62 @@
 """Main entry point for YT-DeepReSearch system."""
 
-import os
+import logging
 import sys
 from pathlib import Path
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from config.settings import Settings
-from research.researcher import DeepResearcher
-from content.script_generator import ScriptGenerator
-from utils.logger import setup_logger
+from orchestrator.workflow import Orchestrator
+
+
+def setup_logging() -> logging.Logger:
+    """Setup basic logging configuration."""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.StreamHandler(sys.stdout),
+            logging.FileHandler('orchestrator.log')
+        ]
+    )
+    return logging.getLogger(__name__)
 
 
 def main():
     """Main execution function."""
     # Setup logging
-    logger = setup_logger()
-    logger.info("Starting YT-DeepReSearch system...")
-    
-    # Load configuration
-    settings = Settings()
+    logger = setup_logging()
+    logger.info("Starting YT-DeepReSearch Orchestrator...")
     
     try:
-        # Initialize components
-        researcher = DeepResearcher(
-            perplexity_api_key=settings.perplexity_api_key,
-            gemini_api_key=settings.gemini_api_key
+        # Initialize orchestrator
+        orchestrator = Orchestrator(
+            queue_file="topics.xlsx",
+            workspace_dir="workspaces",
+            logger=logger
         )
         
-        script_generator = ScriptGenerator(
-            gemini_api_key=settings.gemini_api_key
-        )
+        # Display queue status
+        logger.info("Current queue status:")
+        status = orchestrator.get_queue_status()
+        logger.info(f"Total topics: {status['total_topics']}")
+        logger.info(f"Status breakdown: {status['status_breakdown']}")
         
-        # Get topic from user
-        topic = input("Enter research topic: ")
+        # Run orchestrator (process one topic at a time)
+        orchestrator.run(max_iterations=1)
         
-        # Perform deep research
-        logger.info(f"Researching topic: {topic}")
-        research_data = researcher.research(topic)
+        # Display final queue status
+        logger.info("\nFinal queue status:")
+        final_status = orchestrator.get_queue_status()
+        logger.info(f"Status breakdown: {final_status['status_breakdown']}")
         
-        # Generate script
-        logger.info("Generating video script...")
-        script = script_generator.generate_script(research_data)
-        
-        # Save output
-        output_path = Path(settings.output_dir) / f"{topic.replace(' ', '_')}_script.txt"
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(script)
-        
-        logger.info(f"Script saved to: {output_path}")
-        print(f"\nScript generated successfully!\nSaved to: {output_path}")
+        print("\n✓ Orchestrator completed successfully!")
         
     except Exception as e:
-        logger.error(f"Error: {str(e)}")
+        logger.error(f"Error: {str(e)}", exc_info=True)
         sys.exit(1)
 
 
 if __name__ == "__main__":
-    main()    
+    main()
