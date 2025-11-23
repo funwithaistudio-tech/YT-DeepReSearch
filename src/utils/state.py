@@ -18,8 +18,8 @@ def create_workspace(topic: str, base_dir: str = "projects") -> str:
     Returns:
         Path to the created workspace
     """
-    # Generate UUID based on topic and timestamp
-    topic_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{topic}_{datetime.now().isoformat()}"))
+    # Generate UUID4 for true randomness
+    topic_uuid = str(uuid.uuid4())
     
     # Create workspace path
     workspace_path = Path(base_dir) / topic_uuid
